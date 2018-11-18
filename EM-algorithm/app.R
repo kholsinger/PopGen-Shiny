@@ -86,7 +86,10 @@ ui <- fluidPage(
         column(4,
                dataTableOutput("table")
                )
-      )
+      ),
+      hr(),
+      p("Source code for this and other Shiny applications is available at:"),
+      uiOutput("github")
     )
   )
 )
@@ -94,10 +97,15 @@ ui <- fluidPage(
 ## Define server logic
 ##
 server <- function(input, output, session) {
-  url <- a("http://darwin.eeb.uconn.edu/eeb348/lecture-notes/hardy-weinberg.pdf",
+  url_1 <- a("http://darwin.eeb.uconn.edu/eeb348/lecture-notes/hardy-weinberg.pdf",
            href="http://darwin.eeb.uconn.edu/eeb348/lecture-notes/hardy-weinberg.pdf")
   output$darwin <- renderUI({
-    tagList("", url)
+    tagList("", url_1)
+  })
+  url_2 <- a("https://kholsinger.github.io/PopGen-Shiny/",
+           href="https://kholsinger.github.io/PopGen-Shiny/")
+  output$github <- renderUI({
+    tagList("", url_2)
   })
   phenos <- data.frame(A=counts[1],
                        AB=counts[2],
