@@ -3,11 +3,14 @@ library(pegas)
 
 rm(list=ls())
 
-n_pops <- 10
-p <- 0.5
-n <- 25
-
+## adjustable via sliders
+##
 initial_fst <- 0.1
+initial_p <- 0.5
+## fixed for all examples
+##
+n <- 25
+n_pops <- 5
 
 column_names <- function(n_pops) {
   cnames <- character(n_pops)
@@ -17,7 +20,7 @@ column_names <- function(n_pops) {
   return(cnames)
 }
 
-sample_genos <- function(fst) {
+sample_genos <- function(fst, p) {
   a <- ((1.0 - fst)/fst)*p
   b <- ((1.0 - fst)/fst)*(1-p)
   p_pop <- rbeta(n_pops, a, b)
@@ -119,6 +122,11 @@ ui <- fluidPage(
                   min = 0.0,
                   max = 1.0,
                   value = initial_fst),
+      sliderInput("p",
+                  "p_bar:",
+                  min = 0.0,
+                  max = 1.0,
+                  value = initial_p),
       actionButton("go", "Go")
     ),
     mainPanel(
@@ -127,7 +135,7 @@ ui <- fluidPage(
       p("Notice that each time you hit \"Go\" you'll get a different set of genotype counts, even if you don't change the Parametric Fst. That's both because there's sampling of genotypes from the underlying population genotype frequencies and because the population genotype frequencies are themselves derived from allele frequencies that are sampled from the parametric allele frequency distribution among populations."),
       h4("Genotype frequencies in populations"),
       fluidRow(
-        column(n_pops+1,
+        column(n_pops + 1,
                dataTableOutput("genotypes")
                )
       ),
@@ -167,15 +175,16 @@ server <- function(input, output) {
   ##
   set.seed(current_seed)
   get_genos <- eventReactive(input$go,
-                             sample_genos(input$fst))
+                             sample_genos(input$fst,
+                                          input$p))
   output$genotypes <- renderDataTable(get_genos(),
                                       options=list("paging"=FALSE,
                                                    "ordering"=FALSE,
                                                    "info"=FALSE,
                                                    "searching"=FALSE))
-  set.seed(current_seed)
   ## get F-statistics
   ##
+  set.seed(current_seed)
   output$fstats <- renderDataTable(get_fstats(get_genos()),
                                    options=list("paging"=FALSE,
                                                 "ordering"=FALSE,
