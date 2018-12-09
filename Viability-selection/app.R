@@ -39,21 +39,8 @@ get_genotypes <- function(w11, w12, w22) {
 
 calc_p <- function(aa, ab, bb, text) {
   p <- (2*aa + ab)/(2*aa + 2*ab + 2*bb)
-  tmp <- paste("Frequence of A ", text, " selection: ", round(p, 3), sep="")
+  tmp <- paste("Frequency of A ", text, " selection: ", round(p, 3), sep="")
   return(tmp)
-}
-
-get_w_bar <- function(w11, w12, w22) {
-  print(w11)
-  print(w12)
-  print(w22)
-  p <- seq(from = 0.0,
-           to = 1.0,
-           by = 0.001)
-  w_bar <- p^2*w11 + 2*p*(1.0 - p)*w12 * (1.0 - p)^2*w22
-  df <- data.frame(p = p,
-                   w_bar = w_bar)
-  return(df)
 }
 
 ## Define UI
@@ -84,6 +71,7 @@ ui <- fluidPage(
       uiOutput("darwin"),
       p("The genotype numbers correspond to those in the Dobzhansky experiment described in the notes. You can't change them. You can change the fitnesses by moving the sliders."),
       p("This illustration currently shows the results of viability selection", em("within"), "one generation, from zygote (before selection) to adult (after selection)."),
+      p("If you select fitnesses that are either overdominant or underdominant, a dashed line from the x-axis to the mean fitness curve will show the location of the polymorphic equilibrium."),
       h4("Mean fitness"),
       plotOutput("plot"),
       p(strong("Note"), ": The genotype and allele frequency below won't update until you hit \"Go\"."),
@@ -143,11 +131,31 @@ server <- function(input, output) {
              to = 1.0,
              by = 0.001)
     w_bar <- p^2*input$w11 + 2.0*p*(1.0 - p)*input$w12 + (1.0 - p)^2*input$w22
+    w11 <- input$w11
+    w12 <- input$w12
+    w22 <- input$w22
+    if (((w12 < w11) && (w12 < w22)) || ((w12 > w11) && (w12 > w22))) {
+      s1 <- 1 - w11/w12
+      s2 <- 1 - w22/w12
+      p_eq <- s2/(s1 + s2)
+      w_bar_eq <- p_eq^2*w11 + 2.0*p_eq*(1.0 - p_eq)*w12 + (1.0 - p_eq)^2*w22
+    } else {
+      p_eq <- NA
+    }
     outfile <- tempfile(fileext = ".png")
     png(outfile, width = 400, height = 400)
     for.plot <- data.frame(p = p,
                            w_bar = w_bar)
-    w_plot <- ggplot(for.plot, aes(x = p, y = w_bar)) + geom_line()
+    w_plot <- ggplot(for.plot, aes(x = p, y = w_bar)) + geom_line() +
+      ylab(expression(bar(w)))
+    if (!is.na(p_eq)) {
+      w_plot <- w_plot + geom_segment(aes(x = p_eq, y = 0,
+                                          xend = p_eq, yend = w_bar_eq),
+                                      linetype = "dashed") +
+        annotate("text", x = p_eq, y = w_bar_eq + 0.04,
+                 label = "hat(p)",
+                 parse = TRUE, size = 5)
+    }
     print(w_plot)
     dev.off()
     return(list(src = outfile,
