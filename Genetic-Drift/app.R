@@ -6,6 +6,7 @@ library(plotly)
 initial_p <- 0.5
 initial_N <- 100
 initial_n_gen <- 100
+initial_n_pops <- 5
 
 ## from https://plot.ly/r/cumulative-animations/
 ##
@@ -63,38 +64,67 @@ ui <- fluidPage(
                   "Number of generations",
                   min = 1,
                   max = 1000,
-                  value = initial_n_gen)
+                  value = initial_n_gen),
+      sliderInput("n_pops",
+                  "Number of populations",
+                  min = 1,
+                  max = 10,
+                  value = initial_n_pops)
       ),
 
     ## Show a plot of the simulated change in allele frequencies
     ##
     mainPanel(
-      plotlyOutput("allele_frequency_plot")
+      p("Notes explaining the principles of genetic drift are available at:",
+        uiOutput("darwin")),
+      p("The sliders to the left allow you to select a different initial allele frequency, population size, number of generations, and number of populations. Each line represents the history of allele frequency change in one population. All populations begin with an identical allele frequency. Each time you change one of the sliders, you'll get a new set of simulation results. If you hit \"Play\" without changing a slider, you'll get a duplicate of the plot you just saw."),
+      plotlyOutput("allele_frequency_plot"),
+      hr(),
+      p("Source code for this and other Shiny applications is available at:",
+        uiOutput("github"))
     )
    )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  url_1 <- a("http://darwin.eeb.uconn.edu/eeb348-notes/drift.pdf",
+           href="http://darwin.eeb.uconn.edu/eeb348-notes/drift.pdf")
+  output$darwin <- renderUI({
+    tagList("", url_1)
+  })
+  url_2 <- a("https://kholsinger.github.io/PopGen-Shiny/",
+           href="https://kholsinger.github.io/PopGen-Shiny/")
+  output$github <- renderUI({
+    tagList("", url_2)
+  })
 
   output$allele_frequency_plot <- renderPlotly({
     ## generate allele frequencies
     ##
-    p <- drift(input$p, input$N, input$n_gen)
-    N <- seq(from = 0, to = input$n_gen, by = 1)
+    df <- data.frame(N = NULL,
+                     p = NULL,
+                     pop = NULL)
+    for (i in 1:input$n_pops) {
+      t <- seq(from = 0, to = input$n_gen, by = 1)
+      p <- drift(input$p, input$N, input$n_gen)
+      pop <- rep(paste("Pop", i, sep=""), length(t))
+      tmp <- data.frame(t = t,
+                        p = p,
+                        pop = pop)
+      df <- rbind(df, tmp)
+    }
     ## construct data frame for plot
     ##
-    df <- data.frame(p = p,
-                     N = N)
     d <- df %>%
-      accumulate_by(~N)
+      accumulate_by(~t)
     ## plot it
     ##
-
     p_plot <- d %>%
       plot_ly(
-        x = ~N,
+        x = ~t,
         y = ~p,
+        split = ~pop,
         frame = ~frame,
         mode = "lines",
         type = "scatter",

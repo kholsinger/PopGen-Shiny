@@ -9,3 +9,4 @@ find a list of direct links to make access a bit more convenient.
 * [Estimating allele frequencies with the EM algorithm](https://keholsinger.shinyapps.io/EM-algorithm-for-allele-frequencies/)
 * [Genetics of geographically structured populations](https://keholsinger.shinyapps.io/F-statistics/)
 * [Viability selection at one locus with two alleles](https://keholsinger.shinyapps.io/Viability-selection/)
+* [Allele frequency changes with genetic drift](https://keholsinger.shinyapps.io/Genetic-Drift/)

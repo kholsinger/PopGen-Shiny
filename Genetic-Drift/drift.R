@@ -3,6 +3,7 @@ library(plotly)
 initial_p <- 0.5
 initial_N <- 100
 initial_n_gen <- 100
+initial_n_pops <- 5
 
 ## from https://plot.ly/r/cumulative-animations/
 ##
@@ -33,10 +34,20 @@ drift <- function(p0, N, n_gen) {
   return(p)
 }
 
-p <- drift(initial_p, initial_N, initial_n_gen)
-N <- seq(from = 0, to = initial_n_gen, by = 1)
-df <- data.frame(p = p,
-                 N = N)
+
+df <- data.frame(N = NULL,
+                 p = NULL,
+                 pop = NULL)
+for (i in 1:n_pops) {
+  N <- seq(from = 0, to = initial_n_gen, by = 1)
+  p <- drift(initial_p, initial_N, initial_n_gen)
+  pop <- rep(paste("Pop", i, sep=""), length(N))
+  tmp <- data.frame(N = N,
+                    p = p,
+                    pop = pop)
+  df <- rbind(df, tmp)
+}
+
 d <- df %>%
   accumulate_by(~N)
 
@@ -44,6 +55,7 @@ p_plot <- d %>%
   plot_ly(
     x = ~N,
     y = ~p,
+    split = ~pop,
     frame = ~frame,
     mode = "lines",
     type = "scatter",
