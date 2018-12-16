@@ -1,6 +1,7 @@
 library(ggplot2)
 library(shiny)
 library(cowplot)
+library(plotly)
 
 rm(list=ls())
 
@@ -9,38 +10,34 @@ rm(list=ls())
 initial_w11 <- 0.6
 initial_w12 <- 0.9
 initial_w22 <- 0.45
+initial_n_gen <- 25
 
-## genotype numbers (from Dobzhansky example in notes)
+## fixed starting points
 ##
-AA <- 41
-AB <- 82
-BB <- 27
+p0 <- c(0.2, 0.5, 0.8)
 
-## after selection
+## from https://plot.ly/r/cumulative-animations/
 ##
-genos <- new.env()
-AA_new <- AA*initial_w11
-AB_new <- AB*initial_w12
-BB_new <- BB*initial_w22
-parent.env(genos)
-
-## convert genotype numbers to a data frame for display
-##
-get_genotypes <- function(w11, w12, w22) {
-  genos$AA_new <- (AA*w11)
-  genos$AB_new <- (AB*w12)
-  genos$BB_new <- (BB*w22)
-  df <- data.frame(Time = c("Before selection", "After selection"),
-                   AA = c(AA, genos$AA_new),
-                   AB = c(AB, genos$AB_new),
-                   BB = c(BB, genos$BB_new))
-  return(df)
+accumulate_by <- function(dat, var) {
+  var <- lazyeval::f_eval(var, dat)
+  lvls <- plotly:::getLevels(var)
+  dats <- lapply(seq_along(lvls), function(x) {
+    cbind(dat[var %in% lvls[seq(1, x)], ], frame = lvls[[x]])
+  })
+  dplyr::bind_rows(dats)
 }
 
-calc_p <- function(aa, ab, bb, text) {
-  p <- (2*aa + ab)/(2*aa + 2*ab + 2*bb)
-  tmp <- paste("Frequency of A ", text, " selection: ", round(p, 3), sep="")
-  return(tmp)
+## dynamics of viability selection in one population
+##
+viability_selection <- function(p0, w11, w12, w22, n_gen) {
+  p <- numeric(n_gen + 1)
+  p[1] <- p0
+  for (i in 2:(n_gen + 1)) {
+    q <- 1.0 - p[i-1]
+    w_bar <- p[i-1]^2*w11 + 2*p[i-1]*q*w12 + q^2*w22
+    p[i] <- (p[i-1]^2*w11 + p[i-1]*q*w12)/w_bar
+  }
+  return(p)
 }
 
 ## Define UI
@@ -64,26 +61,21 @@ ui <- fluidPage(
                   min = 0.0,
                   max = 1.0,
                   value = initial_w22),
-      actionButton("go", "Go")
+      sliderInput("n_gen",
+                  "Number of generations",
+                  min = 1,
+                  max = 100,
+                  value = initial_n_gen)
     ),
     mainPanel(
       p("Notes explaining the data and calculations are available at:"),
       uiOutput("darwin"),
-      p("The genotype numbers correspond to those in the Dobzhansky experiment described in the notes. You can't change them. You can change the fitnesses by moving the sliders."),
-      p("This illustration currently shows the results of viability selection", em("within"), "one generation, from zygote (before selection) to adult (after selection)."),
       p("If you select fitnesses that are either overdominant or underdominant, a dashed line from the x-axis to the mean fitness curve will show the location of the polymorphic equilibrium."),
       h4("Mean fitness"),
       plotOutput("plot"),
-      p(strong("Note"), ": The genotype and allele frequency below won't update until you hit \"Go\"."),
-      h4("Genotypes"),
-      fluidRow(
-        column(4,
-               dataTableOutput("genos")
-               )
-      ),
-      h4("Allele frequency"),
-      uiOutput("before"),
-      uiOutput("after"),
+      h4("Allele frequency dynamics"),
+      p("Hit \"Play\" to see how allele frequencies change over time from three different starting points: p = 0.2, p = 0.5, and p = 0.8."),
+      plotlyOutput("dynamic_plot"),
       hr(),
       p("Source code for this and other Shiny applications is available at:"),
       uiOutput("github")
@@ -105,27 +97,6 @@ server <- function(input, output) {
     tagList("", url_2)
   })
 
-  get_genos <- eventReactive(input$go,
-                             get_genotypes(input$w11,
-                                           input$w12,
-                                           input$w22))
-  output$genos <- renderDataTable(get_genos(),
-                                  options=list("paging"=FALSE,
-                                               "ordering"=FALSE,
-                                               "info"=FALSE,
-                                               "searching"=FALSE))
-  get_p_before <- eventReactive(input$go,
-                                calc_p(AA,
-                                       AB,
-                                       BB,
-                                       "before"))
-  output$before <- renderText(get_p_before())
-  get_p_after <- eventReactive(input$go,
-                               calc_p(genos$AA_new,
-                                      genos$AB_new,
-                                      genos$BB_new,
-                                      "after"))
-  output$after<- renderText(get_p_after())
   output$plot <- renderImage({
     p <- seq(from = 0.0,
              to = 1.0,
@@ -161,6 +132,53 @@ server <- function(input, output) {
     return(list(src = outfile,
                 alt = "A graph showing w-bar as a function of p"))
   }, deleteFile = TRUE)
+
+  output$dynamic_plot <- renderPlotly({
+    ## generate allele frequencies
+    ##
+    df <- data.frame(t = NULL,
+                     p = NULL,
+                     pop = NULL)
+    for (i in 1:length(p0)) {
+      t <- seq(from = 0, to = input$n_gen, by = 1)
+      p <- viability_selection(p0[i],
+                               input$w11,
+                               input$w12,
+                               input$w22,
+                               input$n_gen)
+      pop <- rep(paste("Pop", i, sep=""), length(t))
+      tmp <- data.frame(t = t,
+                        p = p,
+                        pop = pop)
+      df <- rbind(df, tmp)
+    }
+    ## construct data frame for plot
+    ##
+    d <- df %>%
+      accumulate_by(~t)
+    ## plot it
+    ##
+    p_plot <- d %>%
+      plot_ly(
+        x = ~t,
+        y = ~p,
+        split = ~pop,
+        frame = ~frame,
+        mode = "lines",
+        type = "scatter",
+        line = list(simplyfy = FALSE),
+        showlegend = FALSE) %>%
+      layout(
+        yaxis = list(range = c(0.0, 1.0))) %>%
+      animation_opts(
+        frame = 100,
+        transition = 0,
+        redraw = FALSE
+      ) %>%
+      animation_slider(
+        hide = TRUE
+      )
+  })
 }
 
 ## Run the application
