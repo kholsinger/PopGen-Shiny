@@ -10,3 +10,4 @@ find a list of direct links to make access a bit more convenient.
 * [Genetics of geographically structured populations](https://keholsinger.shinyapps.io/F-statistics/)
 * [Viability selection at one locus with two alleles](https://keholsinger.shinyapps.io/Viability-selection/)
 * [Allele frequency changes with genetic drift](https://keholsinger.shinyapps.io/Genetic-Drift/)
+* [Allele frequency changes with genetic drift and mutation](https://keholsinger.shinyapps.io/Drift-mutation/)
