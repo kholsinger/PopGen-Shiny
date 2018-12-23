@@ -93,7 +93,7 @@ server <- function(input, output) {
           "in the notes.\n",
           "Note: The tree depth statistics reported here are rounded to ",
           "3 decimal places. If you multiply the reported tree depth by ",
-          "400, you are not likely to get the number reported here",
+          "400, you are not likely to get the number reported here ",
           "(although it will be close).",
           sep = "")
   })
