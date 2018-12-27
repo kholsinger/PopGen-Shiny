@@ -8,7 +8,7 @@ rm(list = ls())
 
 pop_config <- c(5, 5)
 migration_rate <- 2.0
-mutation_rate <- 2.0
+mutation_rate <- 1.0
 loci_number <- 1
 locus_length <- 1000
 
@@ -34,10 +34,8 @@ model <- coal_model(sample_size = pop_config,
                     ploidy = 1) +
   feat_migration(rate = migration_rate,
                  symmetric = TRUE) +
-  feat_mutation(rate = mutation_rate,
-                model = "IFS") +
+  feat_mutation(rate = mutation_rate) +
   sumstat_seg_sites() +
-  sumstat_jsfs() +
   sumstat_trees()
 results <- simulate(model)
 
@@ -105,6 +103,7 @@ for_plot <- data.frame(taxa = tree$tip.label,
                        Allele = haplos_char,
                        Population = pops)
 p <- p %<+% for_plot +
-  geom_tippoint(aes(color = Allele, shape = Population)) +
+  geom_tippoint(aes(color = Allele, shape = Population),
+                size = min(2.0*(100.0/sum(pop_config)), 4.0)) +
   theme(legend.position = "right")
 print(p)
