@@ -1,7 +1,6 @@
 library(ggplot2)
 library(shiny)
 library(cowplot)
-library(plotly)
 library(coala)
 library(ggtree)
 library(ape)
