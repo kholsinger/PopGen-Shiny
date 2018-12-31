@@ -2,6 +2,13 @@ library(ggplot2)
 library(shiny)
 library(cowplot)
 library(coala)
+## Note: May need to explicitly set Bioconductor repository as follows:
+## 
+## setRepositories(addURLs = c(BioC = "https://bioconductor.org/packages/3.8/bioc"))
+## 
+## where the version number (3.8 above) gets adjusted to reflect the local version of Bioconductor
+## being used
+
 library(ggtree)
 library(ape)
 
