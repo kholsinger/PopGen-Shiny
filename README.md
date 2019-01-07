@@ -15,3 +15,4 @@ more convenient.
 * [The genealogy of the coalescent at one locus in one population](https://keholsinger.shinyapps.io/coalescent/)
 * [The genealogy of the coalescent at one locus in two populations with migration and mutation](https://keholsinger.shinyapps.io/Coalescent-structured-population/)
 * [The additive effect of alleles and partitioning genetic variance](https://keholsinger.shinyapps.io/quant-gen-additive-effects/)
+* [Resemblance between parents and offspring](https://keholsinger.shinyapps.io/Quant-gen-resemblance/)

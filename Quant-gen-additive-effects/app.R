@@ -19,7 +19,7 @@ a1_text <- function(p, x11, x12, x22) {
 a2_text <- function(p, x11, x12, x22) {
   x_bar <- p^2*x11 + 2.0*p*(1.0 - p)*x12 + (1.0 - p)^2*x22
   text <- paste("= ", p, "*", x12, " + ", (1.0 - p), "*", x22,
-                " - ", round(x_bar, 3),
+                " - ", round(x_bar/2, 3),
                 " = ", round(p*x12 + (1.0 - p)*x22 - x_bar/2.0, 3),
                 sep = "")
   return(text)
@@ -87,6 +87,7 @@ ui <- fluidPage(
     mainPanel(
       p("This application illustrates calculation of the additive effect of an allele and partitioning of the genotypic variance into additive and dominance components given known genotypic values for genotypes at one locus with two alleles and an allele frequency. Notes that explain the principles behind the calculation are available at"),
       uiOutput("darwin"),
+      HTML("<p>The notation here uses A and a to represent the different alleles. A corresponds to A<sub>1</sub>, and a corresponds to A<sub>2</sub>.</p>"),
       h2("Additive effects"),
       HTML("&alpha;<sub>1</sub> = p*x<sub>11</sub> + (1-p)*x<sub>12</sub> - x_bar/2"),
       uiOutput("a1"),
