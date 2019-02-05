@@ -6,6 +6,7 @@ rm(list=ls())
 ## adjustable via sliders
 ##
 initial_fst <- 0.1
+initial_fis <- 0.0
 initial_p <- 0.5
 ## fixed for all examples
 ##
@@ -20,14 +21,14 @@ column_names <- function(n_pops) {
   return(cnames)
 }
 
-sample_genos <- function(fst, p) {
+sample_genos <- function(fst, fis, p) {
   a <- ((1.0 - fst)/fst)*p
   b <- ((1.0 - fst)/fst)*(1-p)
   p_pop <- rbeta(n_pops, a, b)
   x <- matrix(nrow = 3, ncol = n_pops)
-  x[1,] <- p_pop^2
-  x[2,] <- 2.0*p_pop*(1.0 - p_pop)
-  x[3,] <- (1.0 - p_pop)^2
+  x[1,] <- p_pop^2 + fis*p*(1.0 - p)
+  x[2,] <- 2.0*p_pop*(1.0 - p_pop)*(1.0 - fis)
+  x[3,] <- (1.0 - p_pop)^2 + fis*p*(1.0 - p)
   y <- matrix(nrow = 3, ncol = n_pops)
   for (i in 1:n_pops) {
     tmp <- rmultinom(1, n, x[,i])
@@ -122,6 +123,11 @@ ui <- fluidPage(
                   min = 0.0,
                   max = 1.0,
                   value = initial_fst),
+      sliderInput("fis",
+                  "Parametric Fis:",
+                  min = 0.0,
+                  max = 1.0,
+                  value = initial_fis),
       sliderInput("p",
                   "p_bar:",
                   min = 0.0,
@@ -176,6 +182,7 @@ server <- function(input, output) {
   set.seed(current_seed)
   get_genos <- eventReactive(input$go,
                              sample_genos(input$fst,
+                                          input$fis,
                                           input$p))
   output$genotypes <- renderDataTable(get_genos(),
                                       options=list("paging"=FALSE,
