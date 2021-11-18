@@ -80,33 +80,6 @@ get_offspring <- function(x, y) {
 }
 
 
-## from Chang, Winston. R Graphics Cookbook. O'Reilly Media.
-##
-## Given a model, predict values of yvar from xvar
-## This supports one predictor and one predicted variable
-##
-## xrange: If NULL, determine the x range from the model object. If a vector
-##    with two numbers, use those as the min and max of the prediction range.
-##
-## samples: Number of samples across the x range.
-##
-## ...: Further arguments to be passed to predict()
-##
-predictvals <- function(model, xvar, yvar, xrange = NULL, samples = 100, ...) {  ## If xrange isn't passed in, determine xrange from the models.
-  ## Different ways of extracting the x range, depending on model type
-  if (is.null(xrange)) {
-    if (any(class(model) %in% c("lm", "glm"))) {
-      xrange <- range( model $ model[[ xvar]])
-    } else if (any(class( model) %in% "loess")) {
-      xrange <- range(model$x)
-    }
-  }
-  newdata <- data.frame(x = seq(xrange[1], xrange[2], length.out = samples))
-  names(newdata) <- xvar
-  newdata[[yvar]] <- predict(model, newdata = newdata, ...)
-  return(newdata)
-}
-
 ## Define UI
 ##
 ui <- fluidPage(
@@ -223,7 +196,7 @@ server <- function(input, output, session) {
     dev.off()
     return(list(src = outfile,
                 alt = "A graph showing phenotype distributions"))
-  })
+  }, deleteFile = TRUE)
 
   output$variances <- renderDataTable(get_variances(input$p,
                                                     input$AA,
@@ -292,21 +265,21 @@ server <- function(input, output, session) {
     intercept <- mean(mid) - mean(off)*slope
     label <- paste("h^2 == ",
                    round(slope, 3))
-    p <- ggplot(for.plot, aes(x = x, y = y)) +
-      geom_point() +
-        geom_abline(slope = slope, intercept = intercept, color="blue") +
-          geom_vline(xintercept = mean(mid), linetype = "dashed") +
-            geom_hline(yintercept = mean(off), linetype = "dashed") +
-              annotate("text", label = label,
-                       x = min(for.plot$x) + 5, y = max(for.plot$y) - 20,
-                       parse = TRUE)
     outfile <- tempfile(fileext = ".png")
     png(outfile, width = 800, height = 400)
-    print(p)
+    po_plot <- ggplot(for.plot, aes(x = x, y = y)) +
+      geom_point() +
+      geom_abline(slope = slope, intercept = intercept, color="blue") +
+      geom_vline(xintercept = mean(mid), linetype = "dashed") +
+      geom_hline(yintercept = mean(off), linetype = "dashed") +
+      annotate("text", label = label,
+               x = min(for.plot$x) + 5, y = max(for.plot$y) - 20,
+               parse = TRUE)
+    print(po_plot)
     dev.off()
     return(list(src = outfile,
                 alt = "A graph showing a parent-offspring regression"))
-  })
+  }, deleteFile = TRUE)
 }
 
 ## Run the application
