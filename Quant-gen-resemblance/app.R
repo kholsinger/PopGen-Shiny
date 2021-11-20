@@ -237,17 +237,18 @@ server <- function(input, output, session) {
     p <- input$p
     ve <- input$ve
     sample_size <- 10^input$sample_size
+    geno_values <- c(input$AA, input$Aa, input$aa)
     genotypes <- c(p^2, 2.0*p*(1.0 - p), (1.0 - p)^2)
     female <- sample(3, size = sample_size, prob = genotypes, replace = TRUE)
     male <- sample(3, size = sample_size, prob = genotypes, replace = TRUE)
     mid <- numeric(sample_size)
     off <- numeric(sample_size)
     for (i in seq(from = 1, to = sample_size)) {
-      f_pheno <- rnorm(1, mean = variances$x[female[i]], sd = sqrt(ve))
-      m_pheno <- rnorm(1, mean = variances$x[male[i]], sd = sqrt(ve))
+      f_pheno <- rnorm(1, mean = geno_values[female[i]], sd = sqrt(ve))
+      m_pheno <- rnorm(1, mean = geno_values[male[i]], sd = sqrt(ve))
       mid[i] <- (f_pheno + m_pheno)/2.0
       off_geno <- get_offspring(female[i], male[i])
-      off[i] <- rnorm(1, mean = variances$x[off_geno], sd = sqrt(ve))
+      off[i] <- rnorm(1, mean = geno_values[off_geno], sd = sqrt(ve))
     }
     for.plot <- data.frame(x = mid,
                            y = off,
@@ -272,9 +273,12 @@ server <- function(input, output, session) {
       geom_abline(slope = slope, intercept = intercept, color="blue") +
       geom_vline(xintercept = mean(mid), linetype = "dashed") +
       geom_hline(yintercept = mean(off), linetype = "dashed") +
+      xlab("Mid-parent value") +
+      ylab("Offspring value") +
       annotate("text", label = label,
                x = min(for.plot$x) + 5, y = max(for.plot$y) - 20,
-               parse = TRUE)
+               parse = TRUE) +
+      theme_bw()
     print(po_plot)
     dev.off()
     return(list(src = outfile,
