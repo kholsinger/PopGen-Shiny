@@ -8,7 +8,7 @@ website. Below you'll find a list of direct links to make access a bit
 more convenient.
 
 * [Estimating allele frequencies with the EM algorithm](https://keholsinger.shinyapps.io/EM-algorithm-for-allele-frequencies/)
-* [Estimating allele frequencies with the EM algorighth (Bayesian version)](https://keholsinger.shinyapps.io/Bayesian-ABO/)
+* [Estimating allele frequencies in the ABO blood group system (Bayesian version)](https://keholsinger.shinyapps.io/Bayesian-ABO/)
 * [Decay of heterozygosity with partial selfing](https://keholsinger.shinyapps.io/Inbreeding/)
 * [Genetics of geographically structured populations](https://keholsinger.shinyapps.io/F-statistics/)
 * [Viability selection at one locus with two alleles](https://keholsinger.shinyapps.io/Viability-selection/)
