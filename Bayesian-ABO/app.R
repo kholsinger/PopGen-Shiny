@@ -58,7 +58,7 @@ estimate <- function(na, nab, nb, no) {
 ## Define UI
 ##
 ui <- fluidPage(
-  titlePanel("Estimating allele frequencies with the EM algorithm (Bayesian version)"),
+  titlePanel("Estimating allele frequencies in the ABO blood group system (Bayesian version)"),
   sidebarLayout(
     sidebarPanel(
       sliderInput("na",
